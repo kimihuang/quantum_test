@@ -1,0 +1,36 @@
+# Labgrid configuration for Quantum project
+
+targets:
+  quantum-qemu:
+    resources:
+      NetworkService:
+        address: 127.0.0.1
+        port: 22
+        username: root
+      RawSerialPort:
+        port: 5000
+    drivers:
+      QEMUDriver:
+        qemu_bin: "/usr/bin/qemu-system-aarch64"
+        kernel: "${OUTPUT_DIR}/quantum_qemu_debug/images/Image"
+        dtb: "${OUTPUT_DIR}/quantum_qemu_debug/images/quantum_qemu.dtb"
+        rootfs: "${OUTPUT_DIR}/quantum_qemu_debug/images/rootfs.cpio"
+        machine: "virt"
+        cpu: "cortex-a76"
+        memory: "1024M"
+        extra_args: "-nographic -serial tcp:127.0.0.1:5000,server,nowait"
+      SerialDriver:
+        txdelay: 0.0
+
+# Test environment configuration
+environment:
+  QEMU_BIN: "/usr/bin/qemu-system-aarch64"
+  TEST_DIR: "${PROJECT_ROOT}/tests"
+  OUTPUT_DIR: "${PROJECT_ROOT}/out"
+  PROJECT_ROOT: "/home/lion/workdir/sourcecode/quantum_main"
+
+
+
+
+
+

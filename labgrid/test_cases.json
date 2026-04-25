@@ -1,0 +1,35 @@
+{
+  "test_cases": [
+    {
+      "name": "boot_kernel",
+      "description": "测试内核启动过程",
+      "commands": [
+        {
+          "type": "boot_kernel",
+          "expect": "Welcome to Buildroot"
+        }
+      ]
+    },
+    {
+      "name": "shell_commands",
+      "description": "测试基本shell命令",
+      "commands": [
+        {
+          "type": "shell",
+          "command": "uname -a",
+          "expect": "Linux"
+        },
+        {
+          "type": "shell",
+          "command": "ls -la",
+          "expect": "total"
+        },
+        {
+          "type": "shell",
+          "command": "echo 'test'",
+          "expect": "test"
+        }
+      ]
+    }
+  ]
+}
