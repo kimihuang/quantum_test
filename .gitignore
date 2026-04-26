@@ -1,0 +1,5 @@
+labgrid_qemu/allure-report
+labgrid_qemu/allure-results
+labgrid/__pycache__/
+labgrid_qemu/__pycache__/
+labgrid_qemu/tools/
