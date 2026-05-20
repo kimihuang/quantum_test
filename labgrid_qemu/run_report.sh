@@ -11,8 +11,8 @@ qemu_test() {
     local venv_pytest="$PROJECT_ROOT/.venv/bin/pytest"
     local allure_bin="${labgrid_dir}/tools/allure-2.29.0/bin/allure"
     local env_file="labgrid-env.yaml"
-    local allure_dir="${labgrid_dir}/allure-results"
-    local allure_report="${labgrid_dir}/allure-report"
+    local allure_dir="${BOARD_OUT_DIR}/allure/results"
+    local allure_report="${BOARD_OUT_DIR}/allure/report"
 
     # 支持 --no-report 跳过报告生成
     local skip_report=0
