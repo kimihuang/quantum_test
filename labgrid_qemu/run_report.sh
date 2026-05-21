@@ -1,12 +1,34 @@
 #!/bin/bash
 # QEMU 测试报告生成
 # 使用 allure-pytest + allure CLI 生成看板报告
-# source 此文件后可使用 qemu_test 函数
+# source 此文件后可使用 labgrid_test 函数
+
+# 显示帮助信息
+_labgrid_test_help() {
+    echo "Usage: labgrid_test <command> [--no-report]"
+    echo ""
+    echo "Commands:"
+    echo "  all           运行所有测试"
+    echo "  <test_py>     指定运行某个测试文件 (如 test_system, test_slt)"
+    echo "  help          显示此帮助信息"
+    echo ""
+    echo "Options:"
+    echo "  --no-report   跳过 allure 报告生成"
+    echo ""
+    echo "Available tests:"
+    local labgrid_dir="$PROJECT_ROOT/labgrid_test/labgrid_qemu"
+    for f in "${labgrid_dir}"/test_*.py; do
+        echo "  $(basename "$f" .py)"
+    done
+}
 
 # 运行 labgrid QEMU 测试并生成 allure 报告
-# Usage: qemu_test [--no-report]
-#   --no-report  跳过 allure 报告生成
-qemu_test() {
+# Usage: labgrid_test <command> [--no-report]
+#   无参数时显示帮助
+#   all       运行所有测试
+#   <test_py> 指定运行某个测试 (如 test_system)
+#   --no-report 跳过 allure 报告生成
+labgrid_test() {
     local labgrid_dir="$PROJECT_ROOT/labgrid_test/labgrid_qemu"
     local venv_pytest="$PROJECT_ROOT/.venv/bin/pytest"
     local allure_bin="${labgrid_dir}/tools/allure-2.29.0/bin/allure"
@@ -14,10 +36,49 @@ qemu_test() {
     local allure_dir="${BOARD_OUT_DIR}/allure/results"
     local allure_report="${BOARD_OUT_DIR}/allure/report"
 
-    # 支持 --no-report 跳过报告生成
+    # 解析参数
     local skip_report=0
-    if [ "$1" = "--no-report" ]; then
-        skip_report=1
+    local test_target=""
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --no-report)
+                skip_report=1
+                shift
+                ;;
+            help|--help|-h)
+                _labgrid_test_help
+                return 0
+                ;;
+            all)
+                test_target="all"
+                shift
+                ;;
+            test_*)
+                test_target="$1"
+                shift
+                ;;
+            *)
+                echo "Error: unknown argument '$1'"
+                _labgrid_test_help
+                return 1
+                ;;
+        esac
+    done
+
+    # 无参数时显示帮助
+    if [ -z "${test_target}" ]; then
+        _labgrid_test_help
+        return 0
+    fi
+
+    # 校验指定的测试文件是否存在
+    if [ "${test_target}" != "all" ]; then
+        if [ ! -f "${labgrid_dir}/${test_target}.py" ]; then
+            echo "Error: test file '${test_target}.py' not found in ${labgrid_dir}"
+            _labgrid_test_help
+            return 1
+        fi
     fi
 
     # 安装 allure CLI（如果不存在且需要生成报告）
@@ -41,14 +102,25 @@ qemu_test() {
     rm -rf "${allure_dir}" "${allure_report}"
     mkdir -p "${allure_dir}"
 
-    echo "========================================"
-    echo "  Running labgrid QEMU tests..."
-    echo "========================================"
+    # 构建 pytest 目标
+    local pytest_target=""
+    if [ "${test_target}" = "all" ]; then
+        pytest_target=""
+        echo "========================================"
+        echo "  Running ALL labgrid QEMU tests..."
+        echo "========================================"
+    else
+        pytest_target="${test_target}.py"
+        echo "========================================"
+        echo "  Running labgrid QEMU test: ${test_target}"
+        echo "========================================"
+    fi
 
     local saved_pwd="$(pwd)"
     cd "${labgrid_dir}"
 
     ${venv_pytest} \
+        ${pytest_target} \
         -v \
         --lg-env "${env_file}" \
         --alluredir="${allure_dir}" \
@@ -84,4 +156,5 @@ qemu_test() {
     return ${exit_code}
 }
 
-export -f qemu_test
+export -f labgrid_test
+export -f _labgrid_test_help
